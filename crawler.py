@@ -163,7 +163,7 @@ class CrawlingItem:
         else:
             # 로그로 남길 수 있게 바꾸기
             with open('e_class.txt', 'a') as f:
-                f.write(e_class+'\n')
+                f.write(url+'\t'+e_class+'\n')
         
         columns = []
         rows = []
@@ -208,7 +208,10 @@ class CrawlingItem:
 
             scores = review_ul.find_all('em', {'class':'_15NU42F3kT'})
             user_id = review_ul.find_all('strong', {'class':'_3QDEeS6NLn'})
-            dates = review_ul.find_all('span', {'class':'_3QDEeS6NLn'})
+            date_soup = review_ul.find_all('span', {'class':'_3QDEeS6NLn'})
+            date = []
+            for i in range(0, len(date_soup), 2):
+                date.append(date_soup[i])
             
             review_div = review_ul.find_all('div', {'class':'YEtwtZFLDz'})
             
@@ -236,7 +239,10 @@ class CrawlingItem:
 
             scores = [x.text for x in scores]
             user_id = [x.text for x in user_id]
-            date = [x.text for x in dates]
+            date = [x.text for x in date]
+
+            # print(date)
+
             # p_num_list = [p_num for i in range(len(user_id))]
             # rows = [p_num_list, user_id, scores, date, reviews, is_month, is_repurch]
             rows = [user_id, scores, date, reviews, is_month, is_repurch]
@@ -245,13 +251,14 @@ class CrawlingItem:
 
             try:
                 next_btn.click()
-                time.sleep(0.5)
+                time.sleep(1)
             except ElementNotInteractableException:
                 break
         
         # print(df_review)
-        # df_review.to_csv(f'reviews/{p_num}.tsv', sep='\t', encoding='utf-8')
-        return df_review
+        # print(p_num)
+        df_review.to_csv(f'reviews/{p_num}.tsv', sep='\t', encoding='utf-8', index=False)
+        # return df_review
 
 class CrawlingBlog:
     pass

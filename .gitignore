@@ -4,6 +4,7 @@
 #notepad
 notepad/
 reviews/
+itemData/
 *.ipynb
 
 ### Python ###
