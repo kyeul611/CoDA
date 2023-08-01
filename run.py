@@ -1,3 +1,7 @@
+'''
+headless 모드에서도 진행상황을 파악할 수 있도록 적절한 출력을 작성하자.
+'''
+
 from crawler import CrawlingItem
 
 import pandas as pd
