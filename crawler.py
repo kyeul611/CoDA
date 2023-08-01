@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import ElementNotInteractableException
 
 import chromedriver_autoinstaller
 
@@ -12,6 +13,7 @@ import re
 import time
 import pandas as pd
 import itertools
+import json
 
 chromedriver_autoinstaller.install()
 options = Options()
@@ -21,6 +23,8 @@ options.add_argument('--disable-usb-devices')
 headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
 
 
+# 정보에 접근하는 class 값 모음. 
+# 크롤링이 정상적으로 작동하지 않는다면 아래 정보가 변경되지 않았는지 살펴보라.
 global elementNames 
 elementNames= {
     'getProdUrls':{
@@ -30,6 +34,7 @@ elementNames= {
         'title':'_22kNQuEXmb',
         'price':'_1LY7DqCnwR',
         'delivery_fee':'bd_ChMMo',
+        # table은 스토어에서 제공하는 테이블 정보에 접근하는 값이다.
         'table_1':{
             'table':'_1_UiXWHt__',
             'ths':'_1iuv6pLHMD',
@@ -40,15 +45,17 @@ elementNames= {
             'table':'TH_yvPweZa',
             'ths':'_15qeGNn6Dt',
             'tds':'jvlKiI0U_y'
-        }
-
+        },
+        'nReview':'UlkDgu9gWI'
+    },
+    'getProdReview':{
 
     }
 }
 
 driver = webdriver.Chrome(options=options)
 
-@staticmethod
+# @staticmethod
 def scroll_down(iter=max):
         '''
         동적 웹 페이지의 모든 컨텐츠를 로드하기 위해 스크롤을 내리는 메서드
@@ -111,6 +118,7 @@ class CrawlingItem:
         '''
         
         driver.get(url)
+        scroll_down(10)
         soup = BeautifulSoup(driver.page_source, 'lxml')
 
         # 정보
@@ -154,30 +162,96 @@ class CrawlingItem:
                 tds.append(table_soup[i].find_all('td', {'class':elementNames['getProdInfo']['table_2']['tds']}))
         else:
             # 로그로 남길 수 있게 바꾸기
-            print(e_class)
+            with open('e_class.txt', 'a') as f:
+                f.write(e_class+'\n')
         
-        '''
-        다음 여기부터 이어 할 것.
-        col에 list의 짝수 원소를 넣고,
-        data에 list의 홀수 원소를 넣는다.
-
-        반복문이 돌 때 하나씩 넣지말고, 반복문이 모두 돌고 나서 한번에 입력한다.
-        그리고 원소는 .text를 사용해서 텍스트만 뽑아낸다.
-        '''
-        df = pd.DataFrame()
-        
+        columns = []
+        rows = []
+        # th는 columns, td는 데이터다.
         for th, td in zip(ths, tds):
             for i in range(len(th)):
-                print(th[i].text, td[i].text)
+                columns.append(th[i].text)
+                rows.append(td[i].text)
+        
+        # 리뷰수 구하기
+        # element = wait.until(EC.presence_of_element_located(
+        #     (By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[1]/div[1]/strong/span')
+        # ))
+        nReview = soup.find('span', {'class':elementNames['getProdInfo']['nReview']})
+        nReview = nReview.text.replace(',', '')
+        
+        columns.append('nReview')
+        rows.append(nReview)
 
+        # df로 데이터 저장
+        data = {col: [value] for col, value in zip(columns, rows)}
+        df = pd.DataFrame(data=data)
+        return df
         
 
-    def getProdReview(self):
+    def getProdReview(p_num):
         '''
         상품의 리뷰 데이터를 수집하는 메서드
         '''
-        pass
+        next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
+        # df_review = pd.DataFrame(columns=['p_num', 'user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
+        
+        df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
 
+        while True:
+            
+            soup = BeautifulSoup(driver.page_source,'lxml')
+            review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
+            if review_ul == None:
+                # 리뷰가 없다면 종료
+                break
+
+            scores = review_ul.find_all('em', {'class':'_15NU42F3kT'})
+            user_id = review_ul.find_all('strong', {'class':'_3QDEeS6NLn'})
+            dates = review_ul.find_all('span', {'class':'_3QDEeS6NLn'})
+            
+            review_div = review_ul.find_all('div', {'class':'YEtwtZFLDz'})
+            
+            reviews, is_month, is_repurch = [], [], []
+
+            # 리뷰를 저장하고 '재구매', '한달사용기' 정보를 판단함
+            for div in review_div:
+                    review = div.find('span', {'class':'_3QDEeS6NLn'}).text
+                    reviews.append(review)
+                    re_month = div.find_all('span',{'class':'_1eidska71d'})
+                    
+                    if len(re_month) >= 2:
+                        is_month.append(True)
+                        is_repurch.append(True)
+                    elif len(re_month) == 0:
+                        is_month.append(False)
+                        is_repurch.append(False)
+                    else:
+                        if re_month[0].text == '한달사용기':
+                            is_month.append(True)
+                            is_repurch.append(False)
+                        elif re_month[0].text == '재구매':
+                            is_repurch.append(True)
+                            is_month.append(False)
+
+            scores = [x.text for x in scores]
+            user_id = [x.text for x in user_id]
+            date = [x.text for x in dates]
+            # p_num_list = [p_num for i in range(len(user_id))]
+            # rows = [p_num_list, user_id, scores, date, reviews, is_month, is_repurch]
+            rows = [user_id, scores, date, reviews, is_month, is_repurch]
+            for row in zip(*rows):
+                df_review.loc[len(df_review)] = row
+
+            try:
+                next_btn.click()
+                time.sleep(0.5)
+            except ElementNotInteractableException:
+                break
+        
+        # print(df_review)
+        # df_review.to_csv(f'reviews/{p_num}.tsv', sep='\t', encoding='utf-8')
+        return df_review
 
 class CrawlingBlog:
     pass

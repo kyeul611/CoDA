@@ -3,6 +3,8 @@
 
 #notepad
 notepad/
+reviews/
+*.ipynb
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
