@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import ElementNotInteractableException, TimeoutException
 from selenium.webdriver.chrome.service import Service
 
 from webdriver_manager.chrome import ChromeDriverManager
@@ -20,7 +20,7 @@ import itertools
 import traceback
 
 options = Options()
-options.add_argument('--headless')
+# options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-usb-devices')
@@ -85,9 +85,9 @@ def scroll_down(iter=max):
 
 def write_log(method, query_t, e, err_msg, url=''):
     with open(f'logs/{method}_{query_t}.txt', 'a') as f:
-        f.write(url)
-        f.write(e)
+        f.write(url+'\n')
         f.write(err_msg)
+        f.write("================== line ==================\n\n")
     
 class CrawlingItem:
     def getProdUrls(query, max_pages):
@@ -127,15 +127,16 @@ class CrawlingItem:
         title: log 저장용
         '''
         try:
-            print("아이템 정보 수집 시작")
+            print("아이템 정보 수집 : \"", end="")
             driver.get(url)
-            scroll_down(10)
+            scroll_down(13)
             soup = BeautifulSoup(driver.page_source, 'lxml')
 
             # 정보
             title = soup.find('h3', {'class':elementNames['getProdInfo']['title']}).text
             price = soup.find_all('span', class_=elementNames['getProdInfo']['price'])[-1].text.replace(',', '') # 가격
-            
+            print(title+"\"")
+
             # 배송비
             delivery_fee = soup.find_all('span', attrs={'class':elementNames['getProdInfo']['delivery_fee']})
             
@@ -185,9 +186,13 @@ class CrawlingItem:
                     rows.append(td[i].text)
             
             # 리뷰수 구하기
-            element = wait.until(EC.presence_of_element_located(
-                (By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[1]/div[1]/strong/span[@class="{}"]'.format(elementNames['getProdInfo']['nReview']))
-            ))
+            try:
+                element = wait.until(EC.presence_of_element_located(
+                    (By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[1]/div[1]/strong/span[@class="{}"]'.format(elementNames['getProdInfo']['nReview']))
+                ))
+            except TimeoutException or ElementNotInteractableException:
+                time.sleep(1)
+
             nReview = soup.find('span', {'class':elementNames['getProdInfo']['nReview']})
             nReview = nReview.text.replace(',', '')
             
@@ -200,11 +205,12 @@ class CrawlingItem:
             
             print("아이템 정보 수집 완료")
             return df
-
         
         except Exception as e:
+            # print("error", e)
+            # print("type", type(e))
             err_msg = traceback.format_exc()
-            write_log('getProdInfo', query_t, e, err_msg, url=url)
+            write_log('getProdInfo', query_t, type(e), err_msg, url=url)
             return
             
 
@@ -218,9 +224,9 @@ class CrawlingItem:
         df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         try:
             print(f"{p_num}, 리뷰 수집 시작")
-            print("현재 페이지: ", end='')
+            
             for i in itertools.count(1, 1):
-                print(i, end='\r', flush=True)
+                print(f"현재 리뷰 페이지: {i}", end='\r', flush=True)
                 
                 soup = BeautifulSoup(driver.page_source,'lxml')
                 review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
@@ -278,7 +284,7 @@ class CrawlingItem:
 
         except Exception as e:
             err_msg = traceback.format_exc()
-            write_log('getProdReview', p_num,e, err_msg)
+            write_log('getProdReview', p_num, type(e), err_msg)
             return
 
 class CrawlingBlog:

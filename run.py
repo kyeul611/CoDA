@@ -33,7 +33,9 @@ if __name__=='__main__':
     for url in product_urls:
         print(f"now=>   {url}\n")
         df = pd.concat([df, cItem.getProdInfo(url, query_t)], ignore_index=True)
-        cItem.getProdReview(df.iloc[-1, 0])
+        print(df)
+        # print("nReview", df.iloc[-1, -1])
+        # cItem.getProdReview(df.iloc[-1, 4])
     
     df.to_csv(f'itemData/{query_t}.csv', encoding='utf-8')
     print("수집 완료!")
