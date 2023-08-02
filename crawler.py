@@ -6,22 +6,26 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.webdriver.chrome.service import Service
 
-import chromedriver_autoinstaller
+from webdriver_manager.chrome import ChromeDriverManager
+
+
 
 import re
 import time
 import pandas as pd
 import itertools
-import json
+# import json
+import traceback
 
-chromedriver_autoinstaller.install()
 options = Options()
-# options.add_argument('--headless')
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-usb-devices')
 
 headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
-
 
 # 정보에 접근하는 class 값 모음. 
 # 크롤링이 정상적으로 작동하지 않는다면 아래 정보가 변경되지 않았는지 살펴보라.
@@ -53,9 +57,9 @@ elementNames= {
     }
 }
 
-driver = webdriver.Chrome(options=options)
+driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
+wait = WebDriverWait(driver, 10)
 
-# @staticmethod
 def scroll_down(iter=max):
         '''
         동적 웹 페이지의 모든 컨텐츠를 로드하기 위해 스크롤을 내리는 메서드
@@ -79,9 +83,13 @@ def scroll_down(iter=max):
                 driver.execute_script("window.scrollBy(0, window.innerHeight);")
                 time.sleep(0.5)
 
-
+def write_log(method, query_t, e, err_msg, url=''):
+    with open(f'logs/{method}_{query_t}.txt', 'a') as f:
+        f.write(url)
+        f.write(e)
+        f.write(err_msg)
+    
 class CrawlingItem:
-
     def getProdUrls(query, max_pages):
         '''
         상품 상세 페이지로 진입하기 위해 url을 수집하는 메서드
@@ -112,82 +120,93 @@ class CrawlingItem:
                 return product_urls
 
 
-    def getProdInfo(url):
+    def getProdInfo(url, query_t):
         '''
         상품 정보를 수집하는 메서드
+        url: 상품 url
+        title: log 저장용
         '''
-        
-        driver.get(url)
-        scroll_down(10)
-        soup = BeautifulSoup(driver.page_source, 'lxml')
-
-        # 정보
-        title = soup.find('h3', {'class':elementNames['getProdInfo']['title']})
-        price = soup.find_all('span', class_=elementNames['getProdInfo']['price'])[-1].text.replace(',', '') # 가격
-        
-        # 배송비
-        delivery_fee = soup.find_all('span', attrs={'class':elementNames['getProdInfo']['delivery_fee']})
-        
-        delivery_fee = delivery_fee[-1].text
-
-        price_pattern = r'\d{1,3}(,\d{3})*'
         try:
-            delivery_fee = re.search(price_pattern, delivery_fee).group()
-            delivery_fee =  int(delivery_fee.replace(',', ''))
-        except AttributeError:
-            delivery_fee = 0
+            print("아이템 정보 수집 시작")
+            driver.get(url)
+            scroll_down(10)
+            soup = BeautifulSoup(driver.page_source, 'lxml')
 
-        wait = WebDriverWait(driver, 10)
+            # 정보
+            title = soup.find('h3', {'class':elementNames['getProdInfo']['title']}).text
+            price = soup.find_all('span', class_=elementNames['getProdInfo']['price'])[-1].text.replace(',', '') # 가격
+            
+            # 배송비
+            delivery_fee = soup.find_all('span', attrs={'class':elementNames['getProdInfo']['delivery_fee']})
+            
+            delivery_fee = delivery_fee[-1].text
 
-        # f-string에 dictionary 중첩문을 적용할 수 없어서 예외적으로 변수로 만들어서 사용함.
-        table_1 = elementNames['getProdInfo']['table_1']['table']
-        table_2 = elementNames['getProdInfo']['table_2']['table']
+            price_pattern = r'\d{1,3}(,\d{3})*'
+            try:
+                delivery_fee = re.search(price_pattern, delivery_fee).group()
+                delivery_fee =  int(delivery_fee.replace(',', ''))
+            except AttributeError:
+                delivery_fee = 0
 
-        element = wait.until(EC.presence_of_element_located(
-                (By.XPATH, '//*[contains(@class, "{}") or contains(@class, "{}")]'.format(table_1, table_2))
+            
+
+            # f-string에 dictionary 중첩문을 적용할 수 없어서 예외적으로 변수로 만들어서 사용함.
+            table_1 = elementNames['getProdInfo']['table_1']['table']
+            table_2 = elementNames['getProdInfo']['table_2']['table']
+
+            element = wait.until(EC.presence_of_element_located(
+                    (By.XPATH, '//*[contains(@class, "{}") or contains(@class, "{}")]'.format(table_1, table_2))
+                ))
+            e_class = element.get_attribute("class")
+            
+            ths, tds = [], []
+            if e_class == table_1:
+                table_soup = soup.find_all('table', {'class':table_1})
+                for i in range(2):
+                    ths.append(table_soup[i].find_all('th', {'class':elementNames['getProdInfo']['table_1']['ths']}))
+                    tds.append(table_soup[i].find_all('td', {'class':elementNames['getProdInfo']['table_1']['tds']}))
+
+            elif e_class == table_2:
+                table_soup = soup.find_all('table', {'class':table_2})
+                for i in range(2):
+                    ths.append(table_soup[i].find_all('th', {'class':elementNames['getProdInfo']['table_2']['ths']}))
+                    tds.append(table_soup[i].find_all('td', {'class':elementNames['getProdInfo']['table_2']['tds']}))
+            else:
+                # 로그로 남길 수 있게 바꾸기
+                with open('e_class.txt', 'a') as f:
+                    f.write(url+'\t'+e_class+'\n')
+            
+            columns = ['title', 'price', 'delivery_fee']
+            rows = [title, price, delivery_fee]
+            # th는 columns, td는 데이터다.
+            for th, td in zip(ths, tds):
+                for i in range(len(th)):
+                    columns.append(th[i].text)
+                    rows.append(td[i].text)
+            
+            # 리뷰수 구하기
+            element = wait.until(EC.presence_of_element_located(
+                (By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[1]/div[1]/strong/span[@class="{}"]'.format(elementNames['getProdInfo']['nReview']))
             ))
-        e_class = element.get_attribute("class")
-        
-        ths, tds = [], []
-        if e_class == table_1:
-            table_soup = soup.find_all('table', {'class':table_1})
-            for i in range(2):
-                ths.append(table_soup[i].find_all('th', {'class':elementNames['getProdInfo']['table_1']['ths']}))
-                tds.append(table_soup[i].find_all('td', {'class':elementNames['getProdInfo']['table_1']['tds']}))
+            nReview = soup.find('span', {'class':elementNames['getProdInfo']['nReview']})
+            nReview = nReview.text.replace(',', '')
+            
+            columns.append('nReview')
+            rows.append(nReview)
 
-        elif e_class == table_2:
-            table_soup = soup.find_all('table', {'class':table_2})
-            for i in range(2):
-                ths.append(table_soup[i].find_all('th', {'class':elementNames['getProdInfo']['table_2']['ths']}))
-                tds.append(table_soup[i].find_all('td', {'class':elementNames['getProdInfo']['table_2']['tds']}))
-        else:
-            # 로그로 남길 수 있게 바꾸기
-            with open('e_class.txt', 'a') as f:
-                f.write(url+'\t'+e_class+'\n')
-        
-        columns = []
-        rows = []
-        # th는 columns, td는 데이터다.
-        for th, td in zip(ths, tds):
-            for i in range(len(th)):
-                columns.append(th[i].text)
-                rows.append(td[i].text)
-        
-        # 리뷰수 구하기
-        # element = wait.until(EC.presence_of_element_located(
-        #     (By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[1]/div[1]/strong/span')
-        # ))
-        nReview = soup.find('span', {'class':elementNames['getProdInfo']['nReview']})
-        nReview = nReview.text.replace(',', '')
-        
-        columns.append('nReview')
-        rows.append(nReview)
+            # df로 데이터 저장
+            data = {col: [value] for col, value in zip(columns, rows)}
+            df = pd.DataFrame(data=data)
+            
+            print("아이템 정보 수집 완료")
+            return df
 
-        # df로 데이터 저장
-        data = {col: [value] for col, value in zip(columns, rows)}
-        df = pd.DataFrame(data=data)
-        return df
         
+        except Exception as e:
+            err_msg = traceback.format_exc()
+            write_log('getProdInfo', query_t, e, err_msg, url=url)
+            return
+            
 
     def getProdReview(p_num):
         '''
@@ -197,28 +216,31 @@ class CrawlingItem:
         # df_review = pd.DataFrame(columns=['p_num', 'user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         
         df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
+        try:
+            print(f"{p_num}, 리뷰 수집 시작")
+            print("현재 페이지: ", end='')
+            for i in itertools.count(1, 1):
+                print(i, end='\r', flush=True)
+                
+                soup = BeautifulSoup(driver.page_source,'lxml')
+                review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
+                if review_ul == None:
+                    # 리뷰가 없다면 종료
+                    break
 
-        while True:
-            
-            soup = BeautifulSoup(driver.page_source,'lxml')
-            review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
-            if review_ul == None:
-                # 리뷰가 없다면 종료
-                break
+                scores = review_ul.find_all('em', {'class':'_15NU42F3kT'})
+                user_id = review_ul.find_all('strong', {'class':'_3QDEeS6NLn'})
+                date_soup = review_ul.find_all('span', {'class':'_3QDEeS6NLn'})
+                date = []
+                for i in range(0, len(date_soup), 2):
+                    date.append(date_soup[i])
+                
+                review_div = review_ul.find_all('div', {'class':'YEtwtZFLDz'})
+                
+                reviews, is_month, is_repurch = [], [], []
 
-            scores = review_ul.find_all('em', {'class':'_15NU42F3kT'})
-            user_id = review_ul.find_all('strong', {'class':'_3QDEeS6NLn'})
-            date_soup = review_ul.find_all('span', {'class':'_3QDEeS6NLn'})
-            date = []
-            for i in range(0, len(date_soup), 2):
-                date.append(date_soup[i])
-            
-            review_div = review_ul.find_all('div', {'class':'YEtwtZFLDz'})
-            
-            reviews, is_month, is_repurch = [], [], []
-
-            # 리뷰를 저장하고 '재구매', '한달사용기' 정보를 판단함
-            for div in review_div:
+                # 리뷰를 저장하고 '재구매', '한달사용기' 정보를 판단함
+                for div in review_div:
                     review = div.find('span', {'class':'_3QDEeS6NLn'}).text
                     reviews.append(review)
                     re_month = div.find_all('span',{'class':'_1eidska71d'})
@@ -237,28 +259,27 @@ class CrawlingItem:
                             is_repurch.append(True)
                             is_month.append(False)
 
-            scores = [x.text for x in scores]
-            user_id = [x.text for x in user_id]
-            date = [x.text for x in date]
+                scores = [x.text for x in scores]
+                user_id = [x.text for x in user_id]
+                date = [x.text for x in date]
 
-            # print(date)
+                rows = [user_id, scores, date, reviews, is_month, is_repurch]
+                for row in zip(*rows):
+                    df_review.loc[len(df_review)] = row
 
-            # p_num_list = [p_num for i in range(len(user_id))]
-            # rows = [p_num_list, user_id, scores, date, reviews, is_month, is_repurch]
-            rows = [user_id, scores, date, reviews, is_month, is_repurch]
-            for row in zip(*rows):
-                df_review.loc[len(df_review)] = row
+                try:
+                    next_btn.click()
+                    time.sleep(1)
+                except ElementNotInteractableException:
+                    break
+            
+            df_review.to_csv(f'reviews/{p_num}.tsv', sep='\t', encoding='utf-8', index=False)
+            print(f"{p_num}, 수집 완료")
 
-            try:
-                next_btn.click()
-                time.sleep(1)
-            except ElementNotInteractableException:
-                break
-        
-        # print(df_review)
-        # print(p_num)
-        df_review.to_csv(f'reviews/{p_num}.tsv', sep='\t', encoding='utf-8', index=False)
-        # return df_review
+        except Exception as e:
+            err_msg = traceback.format_exc()
+            write_log('getProdReview', p_num,e, err_msg)
+            return
 
 class CrawlingBlog:
     pass
