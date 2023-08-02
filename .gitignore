@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
 #notepad
+log/
 notepad/
 reviews/
 itemData/
