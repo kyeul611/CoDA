@@ -53,7 +53,7 @@ elementNames= {
             'ths':'_15qeGNn6Dt',
             'tds':'jvlKiI0U_y'
         },
-        'nReview':'UlkDgu9gWI'
+        'nReview':'_2pgHN-ntx6'
     },
     'getProdReview':{
 
@@ -197,7 +197,7 @@ class CrawlingItem:
             except TimeoutException or ElementNotInteractableException:
                 time.sleep(1)
 
-            nReview = soup.find('span', {'class':elementNames['getProdInfo']['nReview']})
+            nReview = soup.find('strong', {'class':elementNames['getProdInfo']['nReview']})
             nReview = nReview.text.replace(',', '')
             
             columns.append('nReview')
