@@ -8,7 +8,7 @@ selenium 코드가 실행되고 페이지 로드까지 정해진 시간을 대�
 
 ## 설치
 ```
-> pip insatall -r requirements.txt
+> pip install -r requirements.txt
 ```
 
 ## 실행
