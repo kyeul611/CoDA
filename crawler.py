@@ -133,7 +133,7 @@ class CrawlingItem:
         try:
             print("Now Item title : \"", end="")
             driver.get(url)
-            scroll_down(13)
+            scroll_down(14)
             soup = BeautifulSoup(driver.page_source, 'lxml')
 
             # 정보
