@@ -31,10 +31,12 @@ if __name__=='__main__':
 
     df = pd.DataFrame()
     for url in product_urls:
-        print(f"now=>   {url}\n")
+        # print(f"now=>   {url}\n")
         df = pd.concat([df, cItem.getProdInfo(url, query_t)], ignore_index=True)
-        print("nReview", df.iloc[-1]['nReview'])
-        # cItem.getProdReview(df.iloc[-1, 4])
-    df.fillna(None, inplace=True)
+        
+        pNum = df.iloc[-1]['상품번호']
+        nReview = int(df.iloc[-1]['nReview'])
+        cItem.getProdReview(pNum, nReview)
+    df.fillna(method='ffill', inplace=True)
     df.to_csv(f'itemData/{query_t}.csv', encoding='utf-8')
     print("수집 완료!")

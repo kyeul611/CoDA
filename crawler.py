@@ -20,10 +20,12 @@ import itertools
 import traceback
 
 options = Options()
-# options.add_argument('--headless')
+options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-usb-devices')
+options.add_argument('--blink-settings=imagesEnabled=false') # 이미지 로딩 안함
+options.add_experimental_option('excludeSwitches', ['enable-logging']) # selenium 로그 숨김
 
 headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
 
@@ -84,7 +86,7 @@ def scroll_down(iter=max):
                 driver.execute_script("window.scrollBy(0, window.innerHeight);")
                 time.sleep(0.5)
 
-def write_log(method, query_t, e, err_msg, url=''):
+def write_log(method, query_t, err_msg, url=''):
     with open(f'logs/{method}_{query_t}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
@@ -118,9 +120,6 @@ class CrawlingItem:
                 if 'naver.com' in shop_url: # 네이버 스토어 제품이라면
                     product_urls.append(item_url)
 
-                else:
-                    print(shop_list)  
-
             if page_num >= max_pages:
                 return product_urls
 
@@ -132,7 +131,7 @@ class CrawlingItem:
         title: log 저장용
         '''
         try:
-            print("아이템 정보 수집 : \"", end="")
+            print("Now Item title : \"", end="")
             driver.get(url)
             scroll_down(13)
             soup = BeautifulSoup(driver.page_source, 'lxml')
@@ -208,30 +207,31 @@ class CrawlingItem:
             data = {col: [value] for col, value in zip(columns, rows)}
             df = pd.DataFrame(data=data)
             
-            print("아이템 정보 수집 완료")
             return df
         
         except Exception as e:
             # print("error", e)
             # print("type", type(e))
             err_msg = traceback.format_exc()
-            write_log('getProdInfo', query_t, type(e), err_msg, url=url)
+            write_log('getProdInfo', query_t, err_msg, url=url)
             return
             
 
-    def getProdReview(p_num):
+    def getProdReview(pNum, nReview):
         '''
         상품의 리뷰 데이터를 수집하는 메서드
         '''
+        total_pages = nReview//20
+
         next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
         # df_review = pd.DataFrame(columns=['p_num', 'user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         
         df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         try:
-            print(f"{p_num}, 리뷰 수집 시작")
+            print(f"리뷰 수집 시작")
             
             for i in itertools.count(1, 1):
-                print(f"현재 리뷰 페이지: {i}", end='\r', flush=True)
+                print(f"현재 리뷰 페이지: {i}/{total_pages}", end='\r', flush=True)
                 
                 soup = BeautifulSoup(driver.page_source,'lxml')
                 review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
@@ -280,16 +280,16 @@ class CrawlingItem:
 
                 try:
                     next_btn.click()
-                    time.sleep(1)
+                    time.sleep(0.5)
                 except ElementNotInteractableException:
                     break
             
-            df_review.to_csv(f'reviews/{p_num}.tsv', sep='\t', encoding='utf-8', index=False)
-            print(f"{p_num}, 수집 완료")
+            df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
+            print(f"{pNum}, 수집 완료")
 
         except Exception as e:
             err_msg = traceback.format_exc()
-            write_log('getProdReview', p_num, type(e), err_msg)
+            write_log('getProdReview', pNum, err_msg)
             return
 
 class CrawlingBlog:
