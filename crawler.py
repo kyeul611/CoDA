@@ -32,7 +32,8 @@ headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5
 global elementNames 
 elementNames= {
     'getProdUrls':{
-        'item_list':'product_item__MDtDF'
+        'item_list':'product_item__MDtDF',
+        'shop_list':'product_mall__hPiEH'
     },
     'getProdInfo':{
         'title':'_22kNQuEXmb',
@@ -106,16 +107,20 @@ class CrawlingItem:
             # 현재 페이지의 HTML 소스를 가져와 BeutifulSoup 객체를 생성함
             page_source = driver.page_source
             soup = BeautifulSoup(page_source, 'lxml')
-            item_list = soup.find_all('div', class_=elementNames['getProdUrls']['item_list']) # item list를 모두 가져옴
-            
+            item_list = soup.find_all('div', {'class':elementNames['getProdUrls']['item_list']}) # item list를 모두 가져옴
+            shop_list = soup.find_all('a', {'class':elementNames['getProdUrls']['shop_list']}) # 공식 shop의 url 정보를 가져옴
             # print(item_list)
             # 상품 리스트에서 정보를 추출하자.
-            for item in item_list:
-                m_url = item.find('a').get('href')
+            for item, shop in zip(item_list, shop_list):
+                item_url = item.find('a').get('href')
+                shop_url = shop.get('href')
                 
-                if 'naver.com' in m_url: # 네이버 스토어 제품이라면
-                    product_urls.append(m_url)
-                    
+                if 'naver.com' in shop_url: # 네이버 스토어 제품이라면
+                    product_urls.append(item_url)
+
+                else:
+                    print(shop_list)  
+
             if page_num >= max_pages:
                 return product_urls
 
