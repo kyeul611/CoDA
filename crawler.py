@@ -231,7 +231,7 @@ class CrawlingItem:
             print(f"리뷰 수집 시작")
             
             for i in itertools.count(1, 1):
-                print(f"현재 리뷰 페이지: {i}/{total_pages}", end='\r', flush=True)
+                print(f"현재 리뷰 페이지: {i}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
                 
                 soup = BeautifulSoup(driver.page_source,'lxml')
                 review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
