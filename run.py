@@ -1,18 +1,16 @@
 '''
-headless 모드에서도 진행상황을 파악할 수 있도록 적절한 출력을 작성하자.
-어디가 진행중인지,
-완료된 사항에 대해서는 몇가지 데이터가 수집되었는지 등등
-
-getProdInfo: price와 title 정보 추가되도록해야함
+리눅스에서 테스트를 진행해야함.
 '''
 
 from crawler import CrawlingItem
 
 import pandas as pd
 import os
+import argparse
 
 if __name__=='__main__':
 
+    # 필요한 폴더 생성
     if not os.path.exists('reviews'):
         os.mkdir('reviews')
     if not os.path.exists('itemData'):
@@ -20,19 +18,24 @@ if __name__=='__main__':
     if not os.path.exists('logs'):
         os.mkdir('logs')
 
-    query = '애견 장난감'
-    max_pages = 1
+    # arguement를 받음
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--query', required=True, help='수집을 원하는 키워드를 입력. 띄어쓰기 사이에는 \\를 넣어줘야함. ex) 패션\\ 안경')
+    parser.add_argument('--max_pages', default=1, type=int, help='네이버 쇼핑에서 몇 페이지를 수집할 지 결정. 기본값은 1. 첫페이지만 수집함.')
+    args = parser.parse_args()
+
+    query = args.query
+    max_pages = args.max_pages
 
     query_t = query.replace(' ', '_') # 파일 저장용 문자열 치환
-    query = query.replace(' ', '%20') # 띄어쓰기 문자열 치환
+    query = query.replace(' ', '%20') # url용 띄어쓰기 문자열 치환
 
     cItem = CrawlingItem
     product_urls = cItem.getProdUrls(query, max_pages)
 
     df = pd.DataFrame()
     for url in product_urls:
-        # print(f"now=>   {url}\n")
-        df = pd.concat([df, cItem.getProdInfo(url, query_t)], ignore_index=True)
+        df = pd.concat([df, cItem.getProdInfo(url, query_t)], ignore_index=True) # 아이템 정보를 수집 후 기존 정보와 병합
         
         pNum = df.iloc[-1]['상품번호']
         nReview = int(df.iloc[-1]['nReview'])

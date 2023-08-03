@@ -285,7 +285,7 @@ class CrawlingItem:
                     break
             
             df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
-            print(f"{pNum}, 수집 완료")
+            print("\n")
 
         except Exception as e:
             err_msg = traceback.format_exc()
