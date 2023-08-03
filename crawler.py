@@ -223,12 +223,13 @@ class CrawlingItem:
         '''
         total_pages = nReview//20
 
-        next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
+        
         # df_review = pd.DataFrame(columns=['p_num', 'user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         
         df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         try:
             print(f"리뷰 수집 시작")
+            next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
             
             for i in itertools.count(1, 1):
                 print(f"현재 리뷰 페이지: {i}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
@@ -282,7 +283,9 @@ class CrawlingItem:
                     next_btn.click()
                     time.sleep(0.5)
                 except ElementNotInteractableException:
-                    break
+                    err_msg = traceback.format_exc()
+                    write_log('getProdReview', pNum, err_msg)
+                    continue
             
             df_review.drop_duplicates(inplace=True)
             df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
