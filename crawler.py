@@ -285,7 +285,7 @@ class CrawlingItem:
                 except ElementNotInteractableException:
                     err_msg = traceback.format_exc()
                     write_log('getProdReview', pNum, err_msg)
-                    continue
+                    break
             
             df_review.drop_duplicates(inplace=True)
             df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
