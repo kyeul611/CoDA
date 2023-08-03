@@ -221,7 +221,7 @@ class CrawlingItem:
         '''
         상품의 리뷰 데이터를 수집하는 메서드
         '''
-        total_pages = nReview//20
+        total_pages = (nReview//20) + 1
 
         
         # df_review = pd.DataFrame(columns=['p_num', 'user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
@@ -283,8 +283,8 @@ class CrawlingItem:
                     next_btn.click()
                     time.sleep(0.5)
                 except ElementNotInteractableException:
-                    err_msg = traceback.format_exc()
-                    write_log('getProdReview', pNum, err_msg)
+                    # err_msg = traceback.format_exc()
+                    # write_log('getProdReview', pNum, err_msg)
                     break
             
             df_review.drop_duplicates(inplace=True)
