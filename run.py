@@ -1,6 +1,7 @@
 '''
 리눅스에서 테스트를 진행해야함.
 itemInfo 데이터가 수집될 때마다 일단 저장되도록 변경할 것
+이전에 진행한 페이지는 건너뛰는 방법을 고민해보자.
 '''
 
 from crawler import CrawlingItem
