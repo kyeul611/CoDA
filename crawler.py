@@ -86,8 +86,8 @@ def scroll_down(iter=max):
                 driver.execute_script("window.scrollBy(0, window.innerHeight);")
                 time.sleep(0.5)
 
-def write_log(method, query_t, err_msg, url=''):
-    with open(f'logs/{method}_{query_t}.txt', 'a') as f:
+def write_log(method, query, err_msg, url=''):
+    with open(f'logs/{method}_{query}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
         f.write("================== line ==================\n\n")
@@ -284,6 +284,7 @@ class CrawlingItem:
                 except ElementNotInteractableException:
                     break
             
+            df_review.drop_duplicates(inplace=True)
             df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
             print("\n")
 
