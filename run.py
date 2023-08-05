@@ -34,14 +34,25 @@ if __name__=='__main__':
 
     cItem = CrawlingItem
     product_urls = cItem.getProdUrls(query_url, max_pages)
+    
+    # query에 해당하는 데이터가 있으면 불러온다.
+    if os.path.exists('itemData/{query}.csv'):
+        df = pd.read_csv('itemData/{query}.csv')
 
-    df = pd.DataFrame()
+        # 여기에 중복 url을 피하도록 product_url 리스트를 수정하자
+    else:
+        df = pd.DataFrame()
+
+    # 정보와 리뷰 수집
     for url in product_urls:
-        df = pd.concat([df, cItem.getProdInfo(url, query)], ignore_index=True) # 아이템 정보를 수집 후 기존 정보와 병합
+        item_info = cItem.getProdInfo(url, query)
+        df = pd.concat([df, item_info], ignore_index=True) # 아이템 정보를 수집 후 기존 정보와 병합
+        df.to_csv(f'itemData/{query}.csv', encoding='utf-8', mode='w')
         
         pNum = df.iloc[-1]['상품번호']
         nReview = int(df.iloc[-1]['nReview'])
-        cItem.getProdReview(pNum, nReview)
-    df.fillna(method='ffill', inplace=True)
-    df.to_csv(f'itemData/{query}.csv', encoding='utf-8')
+        cItem.getProdReview(pNum, nReview) # 리뷰 수집
+
+    df.fillna(method='ffill', inplace=True) 
+    
     print("수집 완료!")
