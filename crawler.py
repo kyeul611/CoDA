@@ -61,7 +61,7 @@ elementNames= {
 }
 
 driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 5)
 
 def scroll_down(iter=max):
         '''
@@ -286,6 +286,7 @@ class CrawlingItem:
                     # err_msg = traceback.format_exc()
                     # write_log('getProdReview', pNum, err_msg)
                     break
+
             
             df_review.drop_duplicates(inplace=True)
             df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
@@ -293,7 +294,8 @@ class CrawlingItem:
 
         except Exception as e:
             err_msg = traceback.format_exc()
-            write_log('getProdReview', pNum, err_msg)
+            url = driver.current_url
+            write_log('getProdReview', url, pNum, err_msg)
             return
 
 class CrawlingBlog:
