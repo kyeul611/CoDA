@@ -86,7 +86,7 @@ def scroll_down(iter=max):
                 driver.execute_script("window.scrollBy(0, window.innerHeight);")
                 time.sleep(0.5)
 
-def write_log(method, query, err_msg, url=''):
+def write_log(method, query, url, err_msg):
     with open(f'logs/{method}_{query}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
@@ -213,11 +213,11 @@ class CrawlingItem:
             # print("error", e)
             # print("type", type(e))
             err_msg = traceback.format_exc()
-            write_log('getProdInfo', query_t, err_msg, url=url)
+            write_log('getProdInfo', query_t, url, err_msg )
             return
             
 
-    def getProdReview(pNum, nReview):
+    def getProdReview(pNum, query, nReview):
         '''
         상품의 리뷰 데이터를 수집하는 메서드
         '''
@@ -295,7 +295,7 @@ class CrawlingItem:
         except Exception as e:
             err_msg = traceback.format_exc()
             url = driver.current_url
-            write_log('getProdReview', url, pNum, err_msg)
+            write_log('getProdReview', query, url, err_msg)
             return
 
 class CrawlingBlog:
