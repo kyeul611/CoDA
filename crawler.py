@@ -56,7 +56,13 @@ elementNames= {
         'nReview':'_2pgHN-ntx6'
     },
     'getProdReview':{
-
+        'review_ul':'TsOLil1PRz',
+        'scores':'_15NU42F3kT',
+        'user_id':'_3QDEeS6NLn',
+        'date_soup':'_3QDEeS6NLn',
+        'review_div':'YEtwtZFLDz',
+        'review':'_3QDEeS6NLn',
+        're_month':'_1eidska71d',
     }
 }
 
@@ -93,12 +99,13 @@ def write_log(method, query, url, err_msg):
         f.write("================== line ==================\n\n")
     
 class CrawlingItem:
+    
     def getProdUrls(query, max_pages):
         '''
         상품 상세 페이지로 진입하기 위해 url을 수집하는 메서드
         '''
         product_urls = []
-
+        print("?")
         for page_num in itertools.count(1, 1):
             
             # 네이버 쇼핑 검색 결과 페이지 URL을 생성합니다.
@@ -235,27 +242,27 @@ class CrawlingItem:
                 print(f"현재 리뷰 페이지: {i}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
                 
                 soup = BeautifulSoup(driver.page_source,'lxml')
-                review_ul = soup.find('ul', {'class':'TsOLil1PRz'})
+                review_ul = soup.find('ul', {'class':elementNames['getProdReview']['review_ul']})
                 if review_ul == None:
                     # 리뷰가 없다면 종료
                     break
 
-                scores = review_ul.find_all('em', {'class':'_15NU42F3kT'})
-                user_id = review_ul.find_all('strong', {'class':'_3QDEeS6NLn'})
-                date_soup = review_ul.find_all('span', {'class':'_3QDEeS6NLn'})
+                scores = review_ul.find_all('em', {'class': elementNames['getProdReview']['scores']})
+                user_id = review_ul.find_all('strong', {'class':elementNames['getProdReview']['user_id']})
+                date_soup = review_ul.find_all('span', {'class':elementNames['getProdReview']['date_soup']})
                 date = []
                 for i in range(0, len(date_soup), 2):
                     date.append(date_soup[i])
                 
-                review_div = review_ul.find_all('div', {'class':'YEtwtZFLDz'})
+                review_div = review_ul.find_all('div', {'class':elementNames['getProdReview']['review_div']})
                 
                 reviews, is_month, is_repurch = [], [], []
 
                 # 리뷰를 저장하고 '재구매', '한달사용기' 정보를 판단함
                 for div in review_div:
-                    review = div.find('span', {'class':'_3QDEeS6NLn'}).text
+                    review = div.find('span', {'class':elementNames['getProdReview']['review']}).text
                     reviews.append(review)
-                    re_month = div.find_all('span',{'class':'_1eidska71d'})
+                    re_month = div.find_all('span',{'class':elementNames['getProdReview']['re_month']})
                     
                     if len(re_month) >= 2:
                         is_month.append(True)
