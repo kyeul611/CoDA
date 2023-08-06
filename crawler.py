@@ -20,7 +20,7 @@ import itertools
 import traceback
 
 options = Options()
-options.add_argument('--headless')
+# options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-usb-devices')
@@ -85,12 +85,12 @@ def scroll_down(iter=max):
                 else:
                     last_position = current_position
                 
-                time.sleep(0.5)
+                time.sleep(0.75)
 
         else:
             for _ in range(iter):
                 driver.execute_script("window.scrollBy(0, window.innerHeight);")
-                time.sleep(0.5)
+                time.sleep(0.75)
 
 def write_log(method, query, url, err_msg):
     with open(f'logs/{method}_{query}.txt', 'a') as f:
@@ -107,6 +107,7 @@ class CrawlingItem:
         product_urls = []
         print("?")
         for page_num in itertools.count(1, 1):
+            print(page_num)
             
             # 네이버 쇼핑 검색 결과 페이지 URL을 생성합니다.
             url = f"https://search.shopping.naver.com/search/all?frm=NVSHCHK&origQuery={query}&pagingIndex={page_num}&pagingSize=20&productSet=checkout&query={query}&sort=review&timestamp=&viewType=list"
@@ -288,7 +289,7 @@ class CrawlingItem:
 
                 try:
                     next_btn.click()
-                    time.sleep(0.5)
+                    time.sleep(1)
                 except ElementNotInteractableException:
                     # err_msg = traceback.format_exc()
                     # write_log('getProdReview', pNum, err_msg)
