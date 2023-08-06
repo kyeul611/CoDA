@@ -42,6 +42,8 @@ if __name__=='__main__':
         df = pd.DataFrame()
         exists_items = []
 
+    print(product_urls)
+
     # 정보와 리뷰 수집
     for url in product_urls:
         # 아이템 정보 수집
@@ -59,7 +61,7 @@ if __name__=='__main__':
         # 리뷰 데이터 수집
         pNum = df.iloc[-1]['상품번호']
         nReview = int(df.iloc[-1]['nReview'])
-        cItem.getProdReview(pNum, nReview) 
+        cItem.getProdReview(pNum, query, nReview) 
 
     
     
