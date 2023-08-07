@@ -26,7 +26,7 @@ selenium 코드가 실행되고 페이지 로드까지 정해진 시간을 대�
 ## Author
 
 {  
-&emsp;Infra:[
+&emsp;Infra:[  
 &emsp;&emsp;"kyul611":"gyul611@gmail.com",  
 &emsp;&emsp;"":"",  
 &emsp;],  
