@@ -43,12 +43,14 @@ if __name__=='__main__':
         exists_items = []
 
     # 정보와 리뷰 수집
-    for url in product_urls:
+    for i, url in enumerate(product_urls):
         # 아이템 정보 수집
+        print(f"[{i}/{len(product_urls)}]", end="")
         item_info = cItem.getProdInfo(url, query)
 
         # 만약 이미 수집한 데이터라면 리뷰 수집은 하지 않고 건너 뜀
         if int(item_info.iloc[-1]['상품번호']) in exists_items:
+            print("!! 이미 있는 데이터. ")
             continue
         
         # 수집한 데이터를 저장함.
