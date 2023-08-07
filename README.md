@@ -26,14 +26,13 @@ selenium 코드가 실행되고 페이지 로드까지 정해진 시간을 대�
 ## Author
 
 {  
-    Infra:[
-        "kyul611":"gyul611@gmail.com",  
-        "":"",  
-    ],  
-    Data_Analysis :  
-    [  
-        "":"",  
-        "":""  
-    ]  
-
+&emsp;Infra:[
+&emsp;&emsp;"kyul611":"gyul611@gmail.com",  
+&emsp;&emsp;"":"",  
+&emsp;],  
+&emsp;Data_Analysis :  
+&emsp;[  
+&emsp;&emsp;"":"",  
+&emsp;&emsp;"":""  
+&emsp;]  
 }
