@@ -106,7 +106,6 @@ class CrawlingItem:
         '''
         product_urls = []
         for page_num in itertools.count(1, 1):
-            print(page_num)
             
             # 네이버 쇼핑 검색 결과 페이지 URL을 생성합니다.
             url = f"https://search.shopping.naver.com/search/all?frm=NVSHCHK&origQuery={query}&pagingIndex={page_num}&pagingSize=20&productSet=checkout&query={query}&sort=review&timestamp=&viewType=list"
