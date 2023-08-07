@@ -45,7 +45,7 @@ if __name__=='__main__':
     # 정보와 리뷰 수집
     for i, url in enumerate(product_urls):
         # 아이템 정보 수집
-        print(f"[{i}/{len(product_urls)}]", end="")
+        print(f"[{i+1}/{len(product_urls)}]", end="")
         item_info = cItem.getProdInfo(url, query)
 
         # 만약 이미 수집한 데이터라면 리뷰 수집은 하지 않고 건너 뜀
