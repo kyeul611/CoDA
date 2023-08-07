@@ -105,7 +105,6 @@ class CrawlingItem:
         상품 상세 페이지로 진입하기 위해 url을 수집하는 메서드
         '''
         product_urls = []
-        print("?")
         for page_num in itertools.count(1, 1):
             print(page_num)
             
@@ -119,6 +118,12 @@ class CrawlingItem:
             soup = BeautifulSoup(page_source, 'lxml')
             item_list = soup.find_all('div', {'class':elementNames['getProdUrls']['item_list']}) # item list를 모두 가져옴
             shop_list = soup.find_all('a', {'class':elementNames['getProdUrls']['shop_list']}) # 공식 shop의 url 정보를 가져옴
+            
+            if len(shop_list) == 0:
+                write_log('getProdUrls',query, url, page_source)
+                print("페이지 로드 안됨")
+                exit() # 프로그램 종료
+            
             # print(item_list)
             # 상품 리스트에서 정보를 추출하자.
             for item, shop in zip(item_list, shop_list):
