@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import ElementNotInteractableException, TimeoutException
+from selenium.common.exceptions import ElementNotInteractableException, TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 
 from webdriver_manager.chrome import ChromeDriverManager
@@ -93,6 +93,7 @@ def scroll_down(iter=max):
                 time.sleep(0.75)
 
 def write_log(method, query, url, err_msg):
+    print("============== 로그 작성 됨 ==============")
     with open(f'logs/{method}_{query}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
@@ -222,8 +223,6 @@ class CrawlingItem:
             return df
         
         except Exception as e:
-            # print("error", e)
-            # print("type", type(e))
             err_msg = traceback.format_exc()
             write_log('getProdInfo', query_t, url, err_msg )
             return
@@ -243,6 +242,7 @@ class CrawlingItem:
             print(f"리뷰 수집 시작")
             next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
             
+            flag = False # 페이지 로딩이 안될 경우 한번더 시도하고, 두번 째도 안되면 break를 위한 flag 변수
             for i in itertools.count(1, 1):
                 print(f"현재 리뷰 페이지: {i}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
                 
@@ -295,9 +295,17 @@ class CrawlingItem:
                     next_btn.click()
                     time.sleep(1)
                 except ElementNotInteractableException:
-                    # err_msg = traceback.format_exc()
-                    # write_log('getProdReview', pNum, err_msg)
+                    err_msg = traceback.format_exc()
+                    write_log('getProdReview', query, url, err_msg)
                     break
+                except NoSuchElementException:
+                    scroll_down(1)
+                    time.sleep(1)
+                    if flag == True: # NoSuchElementException이 두번 발생 했다면, 반복문을 종료함. 
+                        break
+                    else:
+                        flag=True
+                        continue
 
             
             df_review.drop_duplicates(inplace=True)
@@ -309,6 +317,3 @@ class CrawlingItem:
             url = driver.current_url
             write_log('getProdReview', query, url, err_msg)
             return
-
-class CrawlingBlog:
-    pass
