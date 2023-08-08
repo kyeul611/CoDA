@@ -56,7 +56,7 @@ if __name__=='__main__':
         
         pNum = df.iloc[-1]['상품번호']
         nReview = int(df.iloc[-1]['nReview'])
-        cItem.getProdReview(pNum, nReview) # 리뷰 수집
+        cItem.getProdReview(pNum, query, nReview) # 리뷰 수집
 
     
     

@@ -53,7 +53,9 @@ elementNames= {
             'ths':'_15qeGNn6Dt',
             'tds':'jvlKiI0U_y'
         },
+        'review_btn':'_11xjFby3Le',
         'nReview':'_2pgHN-ntx6'
+
     },
     'getProdReview':{
 
@@ -133,7 +135,7 @@ class CrawlingItem:
         try:
             print("Now Item title : \"", end="")
             driver.get(url)
-            scroll_down(14)
+            scroll_down(3)
             soup = BeautifulSoup(driver.page_source, 'lxml')
 
             # 정보
@@ -189,6 +191,9 @@ class CrawlingItem:
                     columns.append(th[i].text)
                     rows.append(td[i].text)
             
+            review_btn = driver.find_elements(By.CLASS_NAME, elementNames['getProdInfo']['review_btn']) # review_btn
+            review_btn.click()
+
             # 리뷰수 구하기
             try:
                 element = wait.until(EC.presence_of_element_located(
