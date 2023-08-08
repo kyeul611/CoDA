@@ -11,14 +11,6 @@ import argparse
 
 if __name__=='__main__':
 
-    # 필요한 폴더 생성
-    if not os.path.exists('reviews'):
-        os.mkdir('reviews')
-    if not os.path.exists('itemData'):
-        os.mkdir('itemData')
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
-
     # arguement를 받음
     parser = argparse.ArgumentParser()
     parser.add_argument('--query', required=True, help='수집을 원하는 키워드를 입력. 띄어쓰기 사이에는 \\를 넣어줘야함. ex) 패션\\ 안경')
@@ -27,6 +19,16 @@ if __name__=='__main__':
 
     query = args.query
     max_pages = args.max_pages
+
+    # 필요한 폴더 생성
+    if not os.path.exists(f'reviews/{query}'):
+        os.mkdir(f'reviews/{query}')
+    if not os.path.exists('itemData'):
+        os.mkdir('itemData')
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+
+
 
     query_url = query.replace('_', '%20') # url용 띄어쓰기 문자열 치환
 
@@ -46,8 +48,10 @@ if __name__=='__main__':
     for i, url in enumerate(product_urls):
         # 아이템 정보 수집
         print(f"[{i+1}/{len(product_urls)}]", end="")
-        item_info = cItem.getProdInfo(url, query)
+        item_info, flag = cItem.getProdInfo(url, query)
 
+        if flag == False: # 리뷰데이터 수집을 못했다면
+            continue
         # 만약 이미 수집한 데이터라면 리뷰 수집은 하지 않고 건너 뜀
         if int(item_info.iloc[-1]['상품번호']) in exists_items:
             print(">> 이미 있는 데이터이므로 다음으로 넘어갑니다. ")
