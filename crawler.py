@@ -245,7 +245,7 @@ class CrawlingItem:
         
         df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         try:
-            print(f"리뷰 수집 시작")
+            print(f"리뷰 수집 시작: [{pNum}]")
             next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
             
             flag = False # 페이지 로딩이 안될 경우 한번더 시도하고, 두번 째도 안되면 break를 위한 flag 변수
