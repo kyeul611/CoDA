@@ -95,7 +95,7 @@ def scroll_down(iter=max):
                 time.sleep(0.75)
 
 def write_log(method, query, url, err_msg):
-    print("============== 로그 작성 됨 ==============")
+    print("============== 로그 작성 됨 ==============\n")
     with open(f'logs/{method}_{query}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
