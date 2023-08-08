@@ -42,14 +42,15 @@ if __name__=='__main__':
 
     # 리뷰 데이터가 있으면 목록을 가져온다.
     if os.path.exists(f'reviews/{query}'):
-        exists_review = [file.split('.')[0] for file in os.listdir(f'reviews/{query}')]
+        exists_review = [int(file.split('.')[0]) for file in os.listdir(f'reviews/{query}')]
 
     # 정보와 리뷰 수집
     for i, url in enumerate(product_urls):
         print(f"[{i+1}/{len(product_urls)}]", end="")
-        
+
         # 아이템 정보 수집
         item_info = cItem.getProdInfo(url, query)
+        
         if int(item_info.iloc[-1]['상품번호']) not in exists_items:
             # 수집한 데이터를 저장함.
             df = pd.concat([df, item_info], ignore_index=True) # 아이템 정보를 수집 후 기존 정보와 병합
@@ -57,7 +58,9 @@ if __name__=='__main__':
             df.drop_duplicates(inplace=True)
             df.to_csv(f'itemData/{query}.csv', encoding='utf-8', mode='w') # 데이터를 덮어씀. 지속적으로 IO가 일어나기 때문에 성능에 영향을 끼칠 수 있지만, column이 통일되지 않은 상황에서 데이터를 지속적으로 저장하기 위한 차선책.
         
-        # 이미 수집한 리뷰라면 건너 뛴다. 
+        # 이미 수집한 리뷰라면 건너 뛴다.
+        item_info_list = [int(item_info) for item_info in df['상품번호'].to_list()]
+
         if int(item_info.iloc[-1]['상품번호']) not in exists_review:
             # 리뷰 데이터 수집
             pNum = df.iloc[-1]['상품번호']
