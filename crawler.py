@@ -206,7 +206,7 @@ class CrawlingItem:
             
             # 리뷰 데이터에 접근하기 위해 리뷰 버튼 클릭
             review_btn = driver.find_elements(By.CLASS_NAME, elementNames['getProdInfo']['review_btn']) # review_btn
-            review_btn.click()
+            review_btn[1].click()
 
             # 리뷰수 구하기
             try:
