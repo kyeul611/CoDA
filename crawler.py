@@ -226,12 +226,12 @@ class CrawlingItem:
             data = {col: [value] for col, value in zip(columns, rows)}
             df = pd.DataFrame(data=data)
             
-            return df, True
+            return df
         
         except Exception as e:
             err_msg = traceback.format_exc()
             write_log('getProdInfo', query_t, url, err_msg )
-            return None, False
+            return 
             
 
     def getProdReview(pNum, query, nReview):
@@ -315,7 +315,7 @@ class CrawlingItem:
 
             
             df_review.drop_duplicates(inplace=True)
-            df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
+            df_review.to_csv(f'reviews/{query}/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
             print("\n")
 
         except Exception as e:

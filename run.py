@@ -9,7 +9,6 @@ import os
 import argparse
 
 if __name__=='__main__':
-
     # arguement를 받음
     parser = argparse.ArgumentParser()
     parser.add_argument('--query', required=True, help='수집을 원하는 키워드를 입력. 띄어쓰기 사이에는 \\를 넣어줘야함. ex) 패션\\ 안경')
@@ -59,13 +58,12 @@ if __name__=='__main__':
             df.to_csv(f'itemData/{query}.csv', encoding='utf-8', mode='w') # 데이터를 덮어씀. 지속적으로 IO가 일어나기 때문에 성능에 영향을 끼칠 수 있지만, column이 통일되지 않은 상황에서 데이터를 지속적으로 저장하기 위한 차선책.
         
         # 이미 수집한 리뷰라면 건너 뛴다. 
-        if int(item_info.iloc[-1]['상품번호']) in exists_review:
+        if int(item_info.iloc[-1]['상품번호']) not in exists_review:
+            # 리뷰 데이터 수집
+            pNum = df.iloc[-1]['상품번호']
+            nReview = int(df.iloc[-1]['nReview'])
+            cItem.getProdReview(pNum, query, nReview) # 리뷰 수집
+        else:
             print(">> 이미 있는 데이터이므로 다음으로 넘어갑니다. ")
-            continue
-
-        # 리뷰 데이터 수집
-        pNum = df.iloc[-1]['상품번호']
-        nReview = int(df.iloc[-1]['nReview'])
-        cItem.getProdReview(pNum, query, nReview) # 리뷰 수집
 
     print("수집 완료!")
