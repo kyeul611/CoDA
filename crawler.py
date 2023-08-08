@@ -299,14 +299,14 @@ class CrawlingItem:
 
                 try:
                     next_btn.click()
-                    time.sleep(1)
+                    time.sleep(0.7)
                 except ElementNotInteractableException:
                     err_msg = traceback.format_exc()
                     write_log('getProdReview', query, url, err_msg)
                     break
                 except NoSuchElementException:
                     scroll_down(1)
-                    time.sleep(1)
+                    time.sleep(0.7)
                     if flag == True: # NoSuchElementException이 두번 발생 했다면, 반복문을 종료함. 
                         break
                     else:
