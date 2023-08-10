@@ -315,7 +315,9 @@ class CrawlingItem:
                     else:
                         flag=True
                         continue
-
+                # 페이지를 모두 돌았으면 종료
+                if i > total_pages:
+                    break
             
             df_review.drop_duplicates(inplace=True)
             df_review.to_csv(f'reviews/{query}/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
