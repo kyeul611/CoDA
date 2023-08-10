@@ -252,8 +252,11 @@ class CrawlingItem:
             next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
             
             flag = False # 페이지 로딩이 안될 경우 한번더 시도하고, 두번 째도 안되면 break를 위한 flag 변수
-            for i in itertools.count(1, 1):
-                print(f"현재 리뷰 페이지: {i}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
+            for page_num in itertools.count(1, 1):
+                # 페이지를 모두 돌았으면 종료
+                if page_num > total_pages:
+                    break
+                print(f" 현재 리뷰 페이지: {page_num}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
                 
                 soup = BeautifulSoup(driver.page_source,'lxml')
                 review_ul = soup.find('ul', {'class':elementNames['getProdReview']['review_ul']})
@@ -265,8 +268,8 @@ class CrawlingItem:
                 user_id = review_ul.find_all('strong', {'class':elementNames['getProdReview']['user_id']})
                 date_soup = review_ul.find_all('span', {'class':elementNames['getProdReview']['date_soup']})
                 date = []
-                for i in range(0, len(date_soup), 2):
-                    date.append(date_soup[i])
+                for j in range(0, len(date_soup), 2):
+                    date.append(date_soup[j])
                 
                 review_div = review_ul.find_all('div', {'class':elementNames['getProdReview']['review_div']})
                 
@@ -315,9 +318,7 @@ class CrawlingItem:
                     else:
                         flag=True
                         continue
-                # 페이지를 모두 돌았으면 종료
-                if i > total_pages:
-                    break
+                
             
             df_review.drop_duplicates(inplace=True)
             df_review.to_csv(f'reviews/{query}/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
