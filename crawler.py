@@ -237,7 +237,7 @@ class CrawlingItem:
             return 
             
 
-    def getProdReview(pNum, query, nReview):
+    def getProdReview(pNum, query, nReview, url):
         '''
         상품의 리뷰 데이터를 수집하는 메서드
         '''
@@ -323,6 +323,6 @@ class CrawlingItem:
 
         except Exception as e:
             err_msg = traceback.format_exc()
-            url = driver.current_url
+            print()
             write_log('getProdReview', query, url, err_msg)
             return

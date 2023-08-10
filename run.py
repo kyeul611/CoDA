@@ -68,6 +68,6 @@ if __name__=='__main__':
             nReview = int(df.iloc[-1]['nReview'])
             cItem.getProdReview(pNum, query, nReview) # 리뷰 수집
         else:
-            print(">> 이미 있는 데이터이므로 다음으로 넘어갑니다. ")
+            print("    >> 이미 있는 데이터이므로 다음으로 넘어갑니다. ")
 
     print("수집 완료!")
