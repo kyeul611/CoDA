@@ -46,25 +46,22 @@ if __name__=='__main__':
 
     # 정보와 리뷰 수집
     for i, url in enumerate(product_urls):
-        print(f"[{i+1}/{len(product_urls)}]", end="")
+        print(f"[{i+1}/{len(product_urls)}] ", end="")
 
         # 아이템 정보 수집
         item_info = cItem.getProdInfo(url, query)
-        
-        if int(item_info.iloc[-1]['상품번호']) not in exists_items:
+        pNum = int(item_info.iloc[-1]['상품번호'])
+
+        if pNum not in exists_items:
             # 수집한 데이터를 저장함.
             df = pd.concat([df, item_info], ignore_index=True) # 아이템 정보를 수집 후 기존 정보와 병합
             df.fillna(method='ffill', inplace=True) 
             df.drop_duplicates(inplace=True)
             df.to_csv(f'itemData/{query}.csv', encoding='utf-8', mode='w') # 데이터를 덮어씀. 지속적으로 IO가 일어나기 때문에 성능에 영향을 끼칠 수 있지만, column이 통일되지 않은 상황에서 데이터를 지속적으로 저장하기 위한 차선책.
         
-        
-        item_info_list = [int(item_info) for item_info in df['상품번호'].to_list()] # 수집한 리뷰의 아이템 번호를 리스트로 만듬. 
-        
         # 이미 수집한 리뷰라면 건너 뛴다.
-        if int(item_info.iloc[-1]['상품번호']) not in exists_review:
+        if pNum not in exists_review:
             # 리뷰 데이터 수집
-            pNum = df.iloc[-1]['상품번호']
             nReview = int(df.iloc[-1]['nReview'])
             cItem.getProdReview(pNum, query, nReview, url) # 리뷰 수집
         else:
