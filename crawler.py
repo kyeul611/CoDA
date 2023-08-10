@@ -107,6 +107,8 @@ class CrawlingItem:
         '''
         상품 상세 페이지로 진입하기 위해 url을 수집하는 메서드
         '''
+
+        print("상품 URL을 수집중입니다. 수집한 URL의 개수 : ", end='')
         product_urls = []
         for page_num in itertools.count(1, 1):
             
@@ -136,6 +138,7 @@ class CrawlingItem:
                     product_urls.append(item_url)
 
             if page_num >= max_pages:
+                print(len(product_urls))
                 return product_urls
 
 
