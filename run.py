@@ -50,7 +50,10 @@ if __name__=='__main__':
 
         # 아이템 정보 수집
         item_info = cItem.getProdInfo(url, query)
-        pNum = int(item_info.iloc[-1]['상품번호'])
+        try:
+            pNum = int(item_info.iloc[-1]['상품번호'])
+        except AttributeError:
+            continue
 
         if pNum not in exists_items:
             # 수집한 데이터를 저장함.
