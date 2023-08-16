@@ -19,8 +19,9 @@ if __name__=='__main__':
     max_pages = args.max_pages
 
     # 필요한 폴더 생성
-    if not os.path.exists(f'reviews/{query}'):
+    if not os.path.exists(f'reviews'):
         os.mkdir('reviews')
+    if not os.path.exists(f'reviews/{query}'):
         os.mkdir(f'reviews/{query}')
     if not os.path.exists('itemData'):
         os.mkdir('itemData')
