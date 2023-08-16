@@ -67,8 +67,10 @@ elementNames= {
         're_month':'_1eidska71d',
     }
 }
-
-driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
+try: # 이미 설치된 크롬드라이버가 있으면 
+    driver = webdriver.Chrome(options=options)
+except: # 없으면 설치
+    driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
 wait = WebDriverWait(driver, 5)
 
 def scroll_down(iter=max):
@@ -95,7 +97,7 @@ def scroll_down(iter=max):
                 time.sleep(0.75)
 
 def write_log(method, query, url, err_msg):
-    print("============== 로그 작성 됨 ==============\n")
+    print("\n============== 로그 작성 됨 ==============\n")
     with open(f'logs/{method}_{query}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
