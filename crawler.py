@@ -126,7 +126,7 @@ class CrawlingItem:
             shop_list = soup.find_all('a', {'class':elementNames['getProdUrls']['shop_list']}) # 공식 shop의 url 정보를 가져옴
             
             if len(shop_list) == 0:
-                write_log('getProdUrls',query, url, page_source)
+                write_log('getProdUrls', query, url, page_source)
                 print("페이지 로드 안됨")
                 exit() # 프로그램 종료
             
