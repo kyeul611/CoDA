@@ -1,13 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# <a href="https://colab.research.google.com/github/Tiabet/Project_Market/blob/master/text_preprocessing_pipeline.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
-
 #사용법 : python text_preprocessing_pipeline.py input.tsv
 #결과가 input 파일 이름_preprocessed.tsv 형식으로 저장됩니다.
 
 import unicodedata
+import xml.etree.ElementTree as ET
 import pandas as pd
 from hanspell import spell_checker
 import re
@@ -21,8 +16,13 @@ def normalize_unicode(text):
     return unicodedata.normalize('NFKC', text)
 
 def correct_spelling(text):
-    spelled_sent = spell_checker.check(text)
-    return spelled_sent.checked
+    try:
+        spelled_sent = spell_checker.check(text)
+        return spelled_sent.checked
+    except Exception  as e:
+        print("text", text)
+        print("Error:", e)
+        return text
 
 def apply_regex(text): 
     text = re.sub(r'[^ 가-힣a-zA-Z\(\):]','',text)
@@ -35,6 +35,7 @@ class NormalizeUnicodeTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        print("Normalizing Unicode")
         return X.apply(normalize_unicode)
 
 class CorrectSpellingTransformer(BaseEstimator, TransformerMixin):
@@ -42,6 +43,7 @@ class CorrectSpellingTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        print("Correcting Spelling")
         return X.apply(correct_spelling)
 
 class ApplyRegexTransformer(BaseEstimator, TransformerMixin):
@@ -49,25 +51,28 @@ class ApplyRegexTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        print("Applying Regex")
         return X.apply(apply_regex)
 
 def preprocess_file(input_filename, output_filename):
     df = pd.read_csv(input_filename, sep='\t')
+    print("{}의 리뷰를 전처리 중입니다...".format(input_filename))
+    print("리뷰 개수 : {}".format(len(df['review'])))
     
     preprocessing_pipeline = Pipeline([
         ('normalize_unicode', NormalizeUnicodeTransformer()),
-        ('correct_spelling', CorrectSpellingTransformer()),
         ('apply_regex', ApplyRegexTransformer()),
-        ('correct_spelling_2', CorrectSpellingTransformer())
+        ('correct_spelling', CorrectSpellingTransformer())
     ])
 
     df_preprocessed = preprocessing_pipeline.fit_transform(df['review'])
     df['review'] = df_preprocessed
-    df.to_csv(output_filename, sep='\t', index=False)  
+    df.to_csv(output_filename, sep='\t', index=False)
+    print("저장이 완료되었습니다.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="텍스트 데이터 전처리(띄어쓰기, 불필요언어 제거 등)")
-    parser.add_argument("input_file", help="전처리할 파일명을 입력하세요.", type = str)
+    parser.add_argument("input_file", help="전처리할 파일명을 입력하세요.")
     
     args = parser.parse_args()
     
