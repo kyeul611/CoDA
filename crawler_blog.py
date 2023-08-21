@@ -19,6 +19,7 @@ import time
 import pandas as pd
 import itertools
 import traceback
+import crawler
 
 options = Options()
 options.add_argument('--headless')
@@ -30,48 +31,22 @@ options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
 headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'}
 
-# 크롤링 url, 키워드
-url = 'https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword='
-keyword = ''
-
 try: # 이미 설치된 크롬드라이버가 있으면 
     driver = webdriver.Chrome(options=options)
 except: # 없으면 설치
     driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
 wait = WebDriverWait(driver, 5)
 
-def scroll_down(iter=max):
-        '''
-        동적 웹 페이지의 모든 컨텐츠를 로드하기 위해 스크롤을 내리는 메서드
-        iter: 내리는 횟수
-        '''
-        if iter == max:
-            last_position = 0
-            while True:
-                driver.execute_script("window.scrollBy(0, window.innerHeight);")
-                current_position = driver.execute_script("return window.pageYOffset;")
-
-                if current_position == last_position:
-                    break
-                else:
-                    last_position = current_position
-                
-                time.sleep(0.75)
-
-        else:
-            for _ in range(iter):
-                driver.execute_script("window.scrollBy(0, window.innerHeight);")
-                time.sleep(0.75)
 
 
-class CrawlingItem:
+class CrawlingBlogItem:
     
-    def getProdUrls(query, max_pages):
+    def getBlogUrls(query, max_pages):
         '''
-        상품 상세 페이지로 진입하기 위해 url을 수집하는 메서드
+        블로그 리뷰 페이지로 진입하기 위해 url을 수집하는 메서드
         '''
 
-        print("상품 URL을 수집중입니다. 수집한 URL의 개수 : ", end='')
+        print("블로그 URL을 수집중입니다. 수집한 URL의 개수 : ", end='')
         product_urls = []
 
         for page_num in itertools.count(1, 1):
@@ -79,7 +54,7 @@ class CrawlingItem:
             # 블로그 검색 url
             url = f"https://section.blog.naver.com/Search/Post.naver?pageNo=1&rangeType=ALL&orderBy=sim&keyword={query}"
             driver.get(url)
-            scroll_down() # 모든 컨텐츠가 로드될 때까지 페이지 다운
+            crawler.scroll_down() # 모든 컨텐츠가 로드될 때까지 페이지 다운
 
             # 현재 페이지의 HTML 소스를 가져와 BeutifulSoup 객체를 생성함
             page_source = driver.page_source
@@ -100,6 +75,8 @@ class CrawlingItem:
             # 범위 초과했을 경우
             if page_num >= max_pages:
                 print(len(product_urls))
+                for i in product_urls:
+                    print(i)
                 return product_urls
 
         
