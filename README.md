@@ -33,7 +33,7 @@ selenium 코드가 실행되고 페이지 로드까지 정해진 시간을 대�
 &emsp;],  
 &emsp;Data_Analysis :  
 &emsp;[  
-&emsp;&emsp;"":"",  
-&emsp;&emsp;"":""  
+&emsp;&emsp;"Tiabet":"jamesjames215@gmail.com",  
+&emsp;&emsp;"dev-2unhi":"ironhak1106@gmail.com"  
 &emsp;]  
 }

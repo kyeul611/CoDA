@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import ElementNotInteractableException, TimeoutException
+from selenium.common.exceptions import ElementNotInteractableException, TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 
 from webdriver_manager.chrome import ChromeDriverManager
@@ -20,7 +20,7 @@ import itertools
 import traceback
 
 options = Options()
-# options.add_argument('--headless')
+options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-usb-devices')
@@ -53,7 +53,9 @@ elementNames= {
             'ths':'_15qeGNn6Dt',
             'tds':'jvlKiI0U_y'
         },
+        'review_btn':'_11xjFby3Le',
         'nReview':'_2pgHN-ntx6'
+
     },
     'getProdReview':{
         'review_ul':'TsOLil1PRz',
@@ -65,8 +67,10 @@ elementNames= {
         're_month':'_1eidska71d',
     }
 }
-
-driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
+try: # 이미 설치된 크롬드라이버가 있으면 
+    driver = webdriver.Chrome(options=options)
+except: # 없으면 설치
+    driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
 wait = WebDriverWait(driver, 5)
 
 def scroll_down(iter=max):
@@ -93,6 +97,7 @@ def scroll_down(iter=max):
                 time.sleep(0.75)
 
 def write_log(method, query, url, err_msg):
+    print("\n============== 로그 작성 됨 ==============\n")
     with open(f'logs/{method}_{query}.txt', 'a') as f:
         f.write(url+'\n')
         f.write(err_msg)
@@ -104,10 +109,10 @@ class CrawlingItem:
         '''
         상품 상세 페이지로 진입하기 위해 url을 수집하는 메서드
         '''
+
+        print("상품 URL을 수집중입니다. 수집한 URL의 개수 : ", end='')
         product_urls = []
-        print("?")
         for page_num in itertools.count(1, 1):
-            print(page_num)
             
             # 네이버 쇼핑 검색 결과 페이지 URL을 생성합니다.
             url = f"https://search.shopping.naver.com/search/all?frm=NVSHCHK&origQuery={query}&pagingIndex={page_num}&pagingSize=20&productSet=checkout&query={query}&sort=review&timestamp=&viewType=list"
@@ -119,6 +124,12 @@ class CrawlingItem:
             soup = BeautifulSoup(page_source, 'lxml')
             item_list = soup.find_all('div', {'class':elementNames['getProdUrls']['item_list']}) # item list를 모두 가져옴
             shop_list = soup.find_all('a', {'class':elementNames['getProdUrls']['shop_list']}) # 공식 shop의 url 정보를 가져옴
+            
+            if len(shop_list) == 0:
+                write_log('getProdUrls', query, url, page_source)
+                print("페이지 로드 안됨")
+                exit() # 프로그램 종료
+            
             # print(item_list)
             # 상품 리스트에서 정보를 추출하자.
             for item, shop in zip(item_list, shop_list):
@@ -129,6 +140,7 @@ class CrawlingItem:
                     product_urls.append(item_url)
 
             if page_num >= max_pages:
+                print(len(product_urls))
                 return product_urls
 
 
@@ -141,7 +153,7 @@ class CrawlingItem:
         try:
             print("Now Item title : \"", end="")
             driver.get(url)
-            scroll_down(14)
+            scroll_down(3)
             soup = BeautifulSoup(driver.page_source, 'lxml')
 
             # 정보
@@ -197,6 +209,10 @@ class CrawlingItem:
                     columns.append(th[i].text)
                     rows.append(td[i].text)
             
+            # 리뷰 데이터에 접근하기 위해 리뷰 버튼 클릭
+            review_btn = driver.find_elements(By.CLASS_NAME, elementNames['getProdInfo']['review_btn']) # review_btn
+            review_btn[1].click()
+
             # 리뷰수 구하기
             try:
                 element = wait.until(EC.presence_of_element_located(
@@ -218,14 +234,12 @@ class CrawlingItem:
             return df
         
         except Exception as e:
-            # print("error", e)
-            # print("type", type(e))
             err_msg = traceback.format_exc()
             write_log('getProdInfo', query_t, url, err_msg )
-            return
+            return 
             
 
-    def getProdReview(pNum, query, nReview):
+    def getProdReview(pNum, query, nReview, url):
         '''
         상품의 리뷰 데이터를 수집하는 메서드
         '''
@@ -236,11 +250,15 @@ class CrawlingItem:
         
         df_review = pd.DataFrame(columns=['user_id', 'score', 'date', 'review', 'is_month', 'is_repurch'])
         try:
-            print(f"리뷰 수집 시작")
+            print(f"리뷰 수집 시작: [{pNum}]")
             next_btn = driver.find_element(By.XPATH, '//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[@class="fAUKm1ewwo _2Ar8-aEUTq"]')
             
-            for i in itertools.count(1, 1):
-                print(f"현재 리뷰 페이지: {i}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
+            flag = False # 페이지 로딩이 안될 경우 한번더 시도하고, 두번 째도 안되면 break를 위한 flag 변수
+            for page_num in itertools.count(1, 1):
+                # 페이지를 모두 돌았으면 종료
+                if page_num > total_pages:
+                    break
+                print(f" 현재 리뷰 페이지: {page_num}/{total_pages}(총 리뷰: {nReview})", end='\r', flush=True)
                 
                 soup = BeautifulSoup(driver.page_source,'lxml')
                 review_ul = soup.find('ul', {'class':elementNames['getProdReview']['review_ul']})
@@ -252,8 +270,8 @@ class CrawlingItem:
                 user_id = review_ul.find_all('strong', {'class':elementNames['getProdReview']['user_id']})
                 date_soup = review_ul.find_all('span', {'class':elementNames['getProdReview']['date_soup']})
                 date = []
-                for i in range(0, len(date_soup), 2):
-                    date.append(date_soup[i])
+                for j in range(0, len(date_soup), 2):
+                    date.append(date_soup[j])
                 
                 review_div = review_ul.find_all('div', {'class':elementNames['getProdReview']['review_div']})
                 
@@ -289,22 +307,27 @@ class CrawlingItem:
 
                 try:
                     next_btn.click()
-                    time.sleep(1)
+                    time.sleep(0.7)
                 except ElementNotInteractableException:
-                    # err_msg = traceback.format_exc()
-                    # write_log('getProdReview', pNum, err_msg)
+                    err_msg = traceback.format_exc()
+                    write_log('getProdReview', query, url, err_msg)
                     break
-
+                except NoSuchElementException:
+                    scroll_down(1)
+                    time.sleep(0.7)
+                    if flag == True: # NoSuchElementException이 두번 발생 했다면, 반복문을 종료함. 
+                        break
+                    else:
+                        flag=True
+                        continue
+                
             
             df_review.drop_duplicates(inplace=True)
-            df_review.to_csv(f'reviews/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
+            df_review.to_csv(f'reviews/{query}/{pNum}.tsv', sep='\t', encoding='utf-8', index=False)
             print("\n")
 
         except Exception as e:
             err_msg = traceback.format_exc()
-            url = driver.current_url
+            print()
             write_log('getProdReview', query, url, err_msg)
             return
-
-class CrawlingBlog:
-    pass
