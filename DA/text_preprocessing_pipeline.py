@@ -2,7 +2,6 @@
 #결과가 input 파일 이름_preprocessed.tsv 형식으로 저장됩니다.
 
 import unicodedata
-import xml.etree.ElementTree as ET
 import pandas as pd
 from hanspell import spell_checker
 import re
