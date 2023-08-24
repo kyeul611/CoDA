@@ -19,6 +19,7 @@ import time
 import pandas as pd
 import itertools
 import requests
+import json
 import traceback
 import crawler
 
@@ -101,10 +102,37 @@ class CrawlingBlogItem:
             soup = BeautifulSoup(driver.page_source, 'lxml')
 
             # 리뷰크롤링
-            reviews = soup.find_all('span', attrs={'id': re.compile('^SE-')})
+            review = soup.find_all('span', attrs={'id': re.compile('^SE-')})
+            reviewer = soup.find('span', attrs={'class': 'nick'})
+            title = review[0]
+            date = soup.find(
+                'span', attrs={'class': re.compile('^se_publishDate')})
 
-            time.sleep(5)
-            for i in reviews:
-                print(i.get_text())
-        except:
-            print("오류 발생!")
+            comment = driver.find_elements(By.CLASS_NAME, 'u_cbox_contents')
+            comments = []
+            for i in comment:
+                text = i.get_text()
+                if text != '':
+                    comments.append(i.get_text())
+
+            for i in review:
+                text = i.get_text()
+                if text != '':
+                    reviews.append(i.get_text())
+
+            time.sleep(1)
+
+            for i in comments:
+                print(i)
+
+            # 크롤링한 정보 JSON형식으로 저장
+            result = {'title': title.get_text(),
+                      'reviewer': reviewer.get_text(),
+                      'date': date.get_text(),
+                      'reviews': reviews,
+                      'comments': comments}
+            with open('blog_review.json', 'w', encoding='utf-8') as f:
+                json.dump(result, f, indent='\t', ensure_ascii=False)
+
+        except Exception as ex:
+            print('에러발생:', ex)
