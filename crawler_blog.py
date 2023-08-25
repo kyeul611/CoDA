@@ -91,10 +91,8 @@ class CrawlingBlogItem:
 
         """
 
-        reviews = []
-
         try:
-            print("현재 리뷰 : \"", end="")
+            print("블로그 리뷰 크롤링 시작 \"", end="")
             driver.get(url)
 
             # iframe 밑 #document파일 불러오기
@@ -102,34 +100,37 @@ class CrawlingBlogItem:
             soup = BeautifulSoup(driver.page_source, 'lxml')
 
             # 리뷰크롤링
-            review = soup.find_all('span', attrs={'id': re.compile('^SE-')})
+            reviews = soup.find_all('span', attrs={'id': re.compile('^SE-')})
             reviewer = soup.find('span', attrs={'class': 'nick'})
-            title = review[0]
+            title = reviews[0]
             date = soup.find(
                 'span', attrs={'class': re.compile('^se_publishDate')})
 
-            comment = driver.find_elements(By.CLASS_NAME, 'u_cbox_contents')
-            comments = []
-            for i in comment:
-                text = i.get_text()
-                if text != '':
-                    comments.append(i.get_text())
+            # 댓글 영역 선택
+            driver.find_element(
+                by=By.XPATH, value='//*[@id="Comi223188365892"]').click()
 
-            for i in review:
+            time.sleep(5)
+            comments_element = driver.find_elements(
+                by=By.CLASS_NAME, value='u_cbox_contents')
+
+            review = ""
+            for i in reviews:
                 text = i.get_text()
-                if text != '':
-                    reviews.append(i.get_text())
+                if len(text) > 0:
+                    review += (text + ' ')
 
             time.sleep(1)
-
-            for i in comments:
-                print(i)
+            comments = []
+            for i in comments_element:
+                comments.append(i.get_attribute('innerText'))
 
             # 크롤링한 정보 JSON형식으로 저장
             result = {'title': title.get_text(),
+                      'url': url,
                       'reviewer': reviewer.get_text(),
                       'date': date.get_text(),
-                      'reviews': reviews,
+                      'review': review,
                       'comments': comments}
             with open('blog_review.json', 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent='\t', ensure_ascii=False)
