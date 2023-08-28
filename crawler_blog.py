@@ -84,7 +84,7 @@ class CrawlingBlogItem:
                     print(i)
                 return product_urls
 
-    def getBlogReviews(url, query):
+    def getBlogReviews(url):
         """
         블로그 리뷰글을 수집하는 메서드
         url: 해당 블로그 url
@@ -103,30 +103,29 @@ class CrawlingBlogItem:
             reviews = soup.find_all('span', attrs={'id': re.compile('^SE-')})
             reviewer = soup.find('span', attrs={'class': 'nick'})
             title = reviews[0]
-            date = soup.find(
-                'span', attrs={'class': re.compile('^se_publishDate')})
+            date = soup.find('span', attrs={'class': re.compile('^se_publishDate')})
 
             # 댓글 영역 선택
-            driver.find_element(
-                by=By.XPATH, value='//*[@id="Comi223188365892"]').click()
-
-            time.sleep(5)
-            comments_element = driver.find_elements(
-                by=By.CLASS_NAME, value='u_cbox_contents')
-
-            review = ""
-            for i in reviews:
-                text = i.get_text()
-                if len(text) > 0:
-                    review += (text + ' ')
+            # TODO 클릭이 안됨!
+            #driver.find_element(
+                #By.CSS_SELECTOR, '[class^="btn_comment"]').click()
 
             time.sleep(1)
-            comments = []
+            comments_element=driver.find_elements(by=By.CLASS_NAME, value='u_cbox_contents')
+
+            review=""
+            for i in reviews:
+                 text=i.get_text()
+                 if len(text) > 0:
+                     review += (text + ' ')
+
+            time.sleep(1)
+            comments=[]
             for i in comments_element:
                 comments.append(i.get_attribute('innerText'))
 
             # 크롤링한 정보 JSON형식으로 저장
-            result = {'title': title.get_text(),
+            result={'title': title.get_text(),
                       'url': url,
                       'reviewer': reviewer.get_text(),
                       'date': date.get_text(),
@@ -134,6 +133,7 @@ class CrawlingBlogItem:
                       'comments': comments}
             with open('blog_review.json', 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent='\t', ensure_ascii=False)
-
+            driver.close()
+            
         except Exception as ex:
             print('에러발생:', ex)
