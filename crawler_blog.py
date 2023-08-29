@@ -105,13 +105,17 @@ class CrawlingBlogItem:
             title = reviews[0]
             date = soup.find('span', attrs={'class': re.compile('^se_publishDate')})
 
-            # 댓글 영역 선택
-            # TODO 클릭이 안됨!
-            #driver.find_element(
-                #By.CSS_SELECTOR, '[class^="btn_comment"]').click()
-
             time.sleep(1)
-            comments_element=driver.find_elements(by=By.CLASS_NAME, value='u_cbox_contents')
+            # 댓글 영역 선택
+            # a태그 href에 링크가 아닌 자바스크립트가 들어가있는 경우 제대로 클릭이 안됨
+            # https://blog.naver.com/PostView.nhn?blogId=kiddwannabe&logNo=221430636045
+            # 참고해서 해결
+            btn = driver.find_element(
+                By.CSS_SELECTOR, '[class^="btn_comment"]')
+            driver.execute_script("arguments[0].click();", btn)
+            
+            time.sleep(1)
+            comments_element = driver.find_elements(by=By.CLASS_NAME, value='u_cbox_contents')
 
             review=""
             for i in reviews:
