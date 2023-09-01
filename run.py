@@ -13,10 +13,13 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--query', required=True, help='수집을 원하는 키워드를 입력. 띄어쓰기 사이에는 \\를 넣어줘야함. ex) 패션\\ 안경')
     parser.add_argument('--max_pages', default=1, type=int, help='네이버 쇼핑에서 몇 페이지를 수집할 지 결정. 기본값은 1. 첫페이지만 수집함.')
+    parser.add_argument('--target', default='all', help='all: 상품 데이터와 리뷰데이터\nitem_only: 상품 정보만 수집')
     args = parser.parse_args()
 
     query = args.query
     max_pages = args.max_pages
+    target = False if args.target == 'item_only' else True
+
 
     # 필요한 폴더 생성
     if not os.path.exists(f'reviews'):
@@ -65,7 +68,7 @@ if __name__=='__main__':
             df.to_csv(f'itemData/{query}.csv', encoding='utf-8', mode='w') # 데이터를 덮어씀. 지속적으로 IO가 일어나기 때문에 성능에 영향을 끼칠 수 있지만, column이 통일되지 않은 상황에서 데이터를 지속적으로 저장하기 위한 차선책.
         
         # 이미 수집한 리뷰라면 건너 뛴다.
-        if pNum not in exists_review:
+        if pNum not in exists_review and target==True:
             # 리뷰 데이터 수집
             nReview = int(df.iloc[-1]['nReview'])
             cItem.getProdReview(pNum, query, nReview, url) # 리뷰 수집
