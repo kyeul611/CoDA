@@ -138,6 +138,7 @@ class CrawlingBlogItem:
             with open('blog_review.json', 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent='\t', ensure_ascii=False)
             driver.close()
+            return result
             
         except Exception as ex:
             print('에러발생:', ex)
