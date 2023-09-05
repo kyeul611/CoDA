@@ -182,3 +182,7 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+chromedriver-linux64.zip
+google-chrome-stable_current_amd64.deb
+python
+pip
