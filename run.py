@@ -9,6 +9,7 @@ import pandas as pd
 import os
 import argparse
 import json
+import time
 
 
 def crawling(query, max_pages):
@@ -73,7 +74,7 @@ def crawling_blog(query, max_pages):
         # 아이템 정보 수집
         item_info = bItem.getBlogReviews(url)
 
-        with open(f'blog/{query}_blog_review.json', 'w', encoding='utf-8') as f:
+        with open(f'blog/{query}_blog_review_{i}.json', 'w', encoding='utf-8') as f:
             json.dump(item_info, f, indent='\t', ensure_ascii=False)
 
     print("수집 완료!")
@@ -105,7 +106,4 @@ if __name__ == '__main__':
 
     query_url = query.replace('_', '%20')  # url용 띄어쓰기 문자열 치환
 
-    p0 = Process(target=crawling)
-    p1 = Process(target=crawling_blog)
-
-    p1.start()
+    crawling_blog(query=query, max_pages=max_pages)

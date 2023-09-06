@@ -92,7 +92,7 @@ class CrawlingBlogItem:
         """
 
         try:
-            print("블로그 리뷰 크롤링 시작 \"", end="")
+            print("블로그 리뷰 크롤링 시작\n \"", end="")
             driver.get(url)
 
             # iframe 밑 #document파일 불러오기
@@ -135,9 +135,7 @@ class CrawlingBlogItem:
                       'date': date.get_text(),
                       'review': review,
                       'comments': comments}
-            with open('blog_review.json', 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent='\t', ensure_ascii=False)
-            driver.close()
+            
             return result
             
         except Exception as ex:
