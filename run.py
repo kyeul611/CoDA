@@ -4,7 +4,7 @@
 '''
 from crawler import CrawlingItem
 from crawler_blog import CrawlingBlogItem
-from multiprocessing import Process
+import multiprocessing
 import pandas as pd
 import os
 import argparse
@@ -105,5 +105,12 @@ if __name__ == '__main__':
         os.mkdir('blog')
 
     query_url = query.replace('_', '%20')  # url용 띄어쓰기 문자열 치환
+    pool = multiprocessing.Pool(processes=2)
 
-    crawling_blog(query=query, max_pages=max_pages)
+    p1 = pool.apply_async(crawling, args=(query, max_pages))
+    p2 = pool.apply_async(crawling_blog, args=(query, max_pages))
+
+    p1.get()
+    p2.get()
+    pool.close()
+    pool.join()
