@@ -6,6 +6,7 @@ logs/
 notepad/
 reviews/
 itemData/
+py-hanspell/
 *.ipynb
 
 ### Python ###
