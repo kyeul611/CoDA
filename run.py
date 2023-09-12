@@ -10,6 +10,7 @@ import os
 import argparse
 import json
 import time
+import multiprocessing
 
 
 def crawling(query, max_pages):
@@ -105,12 +106,15 @@ if __name__ == '__main__':
         os.mkdir('blog')
 
     query_url = query.replace('_', '%20')  # url용 띄어쓰기 문자열 치환
-    pool = multiprocessing.Pool(processes=2)
 
-    p1 = pool.apply_async(crawling, args=(query, max_pages))
-    p2 = pool.apply_async(crawling_blog, args=(query, max_pages))
+    # 멀티프로세스 구현
+    process1 = multiprocessing.Process(target=crawling, args=(query, max_pages))
+    process2 = multiprocessing.Process(target=crawling_blog, args=(query,max_pages))
 
-    p1.get()
-    p2.get()
-    pool.close()
-    pool.join()
+    # 프로세스 시작
+    process1.start()
+    process2.start()
+    
+    # 프로세스 종료 대기
+    process1.join()
+    process2.join()
