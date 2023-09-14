@@ -11,9 +11,11 @@ import argparse
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 
+#전각문자 -> 반각문자 변환
 def normalize_unicode(text):
     return unicodedata.normalize('NFKC', text)
 
+#hanspell 패키지 사용해서 띄어쓰기, 맞춤법 처리
 def correct_spelling(text):
     try:
         spelled_sent = spell_checker.check(text)
@@ -21,16 +23,18 @@ def correct_spelling(text):
     except Exception  as e:
         print("text", text)
         print("Error:", e)
-        return text
+        return text #가끔씩 에러를 일으킬 때가 있어서 예외처리
 
+#정규식 적용
 def apply_regex(text): 
-    text = re.sub(r'[^ 가-힣a-zA-Z\(\):]','',text)
-    text = re.sub(r'[a-zA-Z]{1,2}', '', text)
-    text = re.sub(r':\s?[\)D]|:\s?\(', '', text)
-    #text = re.sub(r'\b(\w+)(?: \1\b)+', r'\1', text)
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[^ 가-힣a-zA-Z\(\):]','',text) #필요한 문자 제외 나머지 제거
+    text = re.sub(r'[a-zA-Z]{1,2}', '', text) #kg, ml, L 등 단위와 사이즈 제외하고 영어 제거
+    text = re.sub(r':\s?[\)D]|:\s?\(', '', text) #:), :( 등의 이모티콘 제거
+    #text = re.sub(r'\b(\w+)(?: \1\b)+', r'\1', text) #중복 문자열 제거
+    text = re.sub(r'\s+', ' ', text) #띄어쓰기 여러칸 한칸으로 통일
     return text
 
+#파이프라인에 넣기 위한 Tranformer 설정
 class NormalizeUnicodeTransformer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
@@ -55,12 +59,14 @@ class ApplyRegexTransformer(BaseEstimator, TransformerMixin):
         print("Applying Regex")
         return X.apply(apply_regex)
 
+#전처리 파이프라인
 def preprocess_file(input_filename, output_folder):
     df = pd.read_csv(input_filename, sep='\t')
-    input_folder, input_file = input_filename.split('\\')[-2], input_filename.split('\\')[-1]
+    _, input_file = input_filename.split('\\')[-2], input_filename.split('\\')[-1]
     print("{}의 리뷰를 전처리 중입니다...".format(input_file))
     print("리뷰 개수 : {}".format(len(df['review'])))
     
+    #간소화를 위해 맞춤법 점검은 가장 마지막에
     preprocessing_pipeline = Pipeline([
         ('normalize_unicode', NormalizeUnicodeTransformer()),
         ('apply_regex', ApplyRegexTransformer()),
