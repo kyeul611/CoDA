@@ -14,12 +14,12 @@ requirements 이외에 맞춤법+띄어쓰기 검사 패키지인 Hanspell 설�
 
 ## 실행
 ```
-> !python text_preprocessing_pipeline.py [input_foler_name]
+> !python text_preprocessing_pipeline.py --input_folder [folder_name]
 ```
 
 ### 데이터 병합
 
 ## 실행
 ```
-> python combine_data.py [folder_name]
+> python combine_data.py --input_folder [folder_name]
 ```
