@@ -85,7 +85,7 @@ def preprocess_file(input_filename, output_folder):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="텍스트 데이터 전처리(띄어쓰기, 불필요언어 제거 등)")
-    parser.add_argument("input_folder", help="전처리할 파일들이 있는 폴더명을 입력하세요.")
+    parser.add_argument("--input_folder", help="전처리할 파일들이 있는 폴더명을 입력하세요.")
     
     args = parser.parse_args()
     
