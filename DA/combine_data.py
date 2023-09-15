@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import argparse
 
+#폴더 내 파일들을 병합하는 combine 함수
 def combine(folder_path, folder_name,output_folder):
     print("{} 폴더의 파일들을 병합합니다.".format(folder_path))
     tsv_files = [file for file in os.listdir(folder_path) if file.endswith('.tsv')]
