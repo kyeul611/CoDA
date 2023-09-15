@@ -20,7 +20,7 @@ import itertools
 import traceback
 
 options = Options()
-options.add_argument('--headless')
+# options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument('--disable-usb-devices')
@@ -98,7 +98,7 @@ def scroll_down(iter=max):
 
 def write_log(method, query, url, err_msg):
     print("\n============== 로그 작성 됨 ==============\n")
-    with open(f'logs/{method}_{query}.txt', 'a') as f:
+    with open(f'logs/{method}_{query}.txt', 'a', encoding='utf-8') as f:
         f.write(url+'\n')
         f.write(err_msg)
         f.write("================== line ==================\n\n")
@@ -117,7 +117,7 @@ class CrawlingItem:
             # 네이버 쇼핑 검색 결과 페이지 URL을 생성합니다.
             url = f"https://search.shopping.naver.com/search/all?frm=NVSHCHK&origQuery={query}&pagingIndex={page_num}&pagingSize=20&productSet=checkout&query={query}&sort=review&timestamp=&viewType=list"
             driver.get(url)
-            scroll_down() # 모든 컨텐츠가 로드될 때까지 페이지 다운
+            scroll_down(5) # 모든 컨텐츠가 로드될 때까지 페이지 다운
 
             # 현재 페이지의 HTML 소스를 가져와 BeutifulSoup 객체를 생성함
             page_source = driver.page_source
@@ -212,6 +212,7 @@ class CrawlingItem:
             # 리뷰 데이터에 접근하기 위해 리뷰 버튼 클릭
             review_btn = driver.find_elements(By.CLASS_NAME, elementNames['getProdInfo']['review_btn']) # review_btn
             review_btn[1].click()
+            scroll_down(2)
 
             # 리뷰수 구하기
             try:
